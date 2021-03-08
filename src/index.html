@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>ngx-admin Demo Application</title>
+
+    <base href="/" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css"
+    />
+
+    <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+    <script
+      defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCpVhQiwAllg1RAFaxMWSpQruuGARy0Y1k&libraries=places"
+    ></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    
+    <style>
+      body {
+        font-family: "Open Sans";
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <ngx-app>Loading...</ngx-app>
+
+    <style>
+      @-webkit-keyframes spin {
+        0% {
+          transform: rotate(0);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      @-moz-keyframes spin {
+        0% {
+          -moz-transform: rotate(0);
+        }
+        100% {
+          -moz-transform: rotate(360deg);
+        }
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .spinner {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1003;
+        background: #000000;
+        overflow: hidden;
+      }
+      .spinner div:first-child {
+        display: block;
+        position: relative;
+        left: 50%;
+        top: 50%;
+        width: 150px;
+        height: 150px;
+        margin: -75px 0 0 -75px;
+        border-radius: 50%;
+        box-shadow: 0 3px 3px 0 rgba(255, 56, 106, 1);
+        transform: translate3d(0, 0, 0);
+        animation: spin 2s linear infinite;
+      }
+      .spinner div:first-child:after,
+      .spinner div:first-child:before {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+      }
+      .spinner div:first-child:before {
+        top: 5px;
+        left: 5px;
+        right: 5px;
+        bottom: 5px;
+        box-shadow: 0 3px 3px 0 rgb(255, 228, 32);
+        -webkit-animation: spin 3s linear infinite;
+        animation: spin 3s linear infinite;
+      }
+      .spinner div:first-child:after {
+        top: 15px;
+        left: 15px;
+        right: 15px;
+        bottom: 15px;
+        box-shadow: 0 3px 3px 0 rgba(61, 175, 255, 1);
+        animation: spin 1.5s linear infinite;
+      }
+    </style>
+    <div id="nb-global-spinner" class="spinner">
+      <div class="blob blob-0"></div>
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+      <div class="blob blob-4"></div>
+      <div class="blob blob-5"></div>
+    </div>
+  </body>
+  <script>
+    
+
+    jQuery(($) => {
+      // grab elememts
+      let $wrapper = $('.card-wrapper')
+      let $list = $wrapper.find('.card-list')
+      let $clonedList = $list.clone()
+      let cardLength = 0
+
+      // set an offset of 4 pixels
+      let listHeight = 4
+
+      // add the height of all cards
+      $list.find('.scroll-card').each((_, el) => {
+        cardLength++
+
+        listHeight += ['height', 'margin-top', 'margin-bottom']
+          .map((key) =>
+            parseInt(window.getComputedStyle(el).getPropertyValue(key), 10)
+          )
+          .reduce((prev, cur) => prev + cur)
+      })
+
+      // attach the calculation of the height as a style
+      $list.add($clonedList).css({
+        height: listHeight + 'px'
+      })
+
+      $clonedList.addClass('cloned').appendTo($wrapper)
+      // execute animations
+      let infinite = new TimelineMax({ repeat: -1, paused: true })
+      let time = cardLength * 3
+      
+      // Zoom active
+      function zoomMiddle(list) {
+        const tl = gsap.timeline({repeat: -1});
+        tl
+          // .to(list, {
+        .to(".scroll-card", {
+          scale: 1.4,
+          ease: CustomEase.create(
+            "custom",
+            "M0,0 C0,0.45 0.2,1 0.362,1 0.43,1 0.552,1 0.632,1 0.836,1 1,0.436 1,0"
+          ), // Custom ease that scales and moves down again (add https://s3-us-west-2.amazonaws.com/s.cdpn.io/16327/CustomEase3.min.js)
+          stagger: {
+            amount: time * 2, // Should be synced with the amount it takes to to move up
+            // from: 2 // Start from the second item, but than moves up and down 
+          }
+        })
+        return tl;
+      }
+      
+// Main timeline
+      infinite
+        .fromTo(
+          $list,
+          time,
+          { y: 0 },
+          { y: '-' + listHeight, ease: Linear.easeNone },
+          0
+        )
+        .fromTo(
+          $clonedList,
+          time,
+          { y: listHeight },
+          { y: 0, ease: Linear.easeNone },
+          0
+        )
+        // .add(zoomMiddle($(".scroll-card", $list)), 0)
+        .add(zoomMiddle, 0)
+        .play()
+
+      $wrapper
+        .on('mouseenter', () => infinite.pause())
+        .on('mouseleave', () => infinite.play())
+    })
+    </script>
+</html>
